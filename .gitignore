@@ -1,0 +1,10 @@
+target/
+node_modules/
+.anchor/
+test-ledger/
+.DS_Store
+._*
+*.so
+Cargo.lock
+migrations/
+*.prettierignore

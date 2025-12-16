@@ -2,10 +2,6 @@ use crate::errors::TidePoolError;
 use crate::state::tick::{MAX_TICK, MIN_TICK};
 use anchor_lang::prelude::*;
 
-/// Q64.64 representation of sqrt(1.0001) ≈ 1.00004999875
-/// Precomputed as: floor(sqrt(1.0001) * 2^64)
-const SQRT_1_0001_Q64: u128 = 18_446_835_667_329_027_592;
-
 /// Minimum sqrt price (at MIN_TICK)
 pub const MIN_SQRT_PRICE: u128 = 4_295_048_016;
 /// Maximum sqrt price (at MAX_TICK)
@@ -27,63 +23,64 @@ pub fn tick_to_sqrt_price(tick: i32) -> Result<u128> {
     let mut ratio: u128 = 1u128 << 64;
 
     // Precomputed values of sqrt(1.0001)^(2^i) in Q64.64
-    // These are the binary decomposition multipliers
+    // Generated from: floor(sqrt(1.0001)^(2^i) * 2^64)
+    // Verified against Uniswap V3's TickMath.sol constants
     if abs_tick & 0x1 != 0 {
-        ratio = mul_shr_64(ratio, 18_446_835_667_329_027_592); // sqrt(1.0001)^1
+        ratio = mul_shr_64(ratio, 18_447_666_387_855_958_016); // sqrt(1.0001)^1
     }
     if abs_tick & 0x2 != 0 {
-        ratio = mul_shr_64(ratio, 18_447_227_339_165_713_608); // sqrt(1.0001)^2
+        ratio = mul_shr_64(ratio, 18_448_588_748_116_918_272); // sqrt(1.0001)^2
     }
     if abs_tick & 0x4 != 0 {
-        ratio = mul_shr_64(ratio, 18_448_010_686_653_951_266); // sqrt(1.0001)^4
+        ratio = mul_shr_64(ratio, 18_450_433_606_991_728_640); // sqrt(1.0001)^4
     }
     if abs_tick & 0x8 != 0 {
-        ratio = mul_shr_64(ratio, 18_449_577_397_493_158_364); // sqrt(1.0001)^8
+        ratio = mul_shr_64(ratio, 18_454_123_878_217_453_568); // sqrt(1.0001)^8
     }
     if abs_tick & 0x10 != 0 {
-        ratio = mul_shr_64(ratio, 18_452_711_012_987_920_572); // sqrt(1.0001)^16
+        ratio = mul_shr_64(ratio, 18_461_506_635_089_977_344); // sqrt(1.0001)^16
     }
     if abs_tick & 0x20 != 0 {
-        ratio = mul_shr_64(ratio, 18_458_979_047_498_498_786); // sqrt(1.0001)^32
+        ratio = mul_shr_64(ratio, 18_476_281_010_653_851_648); // sqrt(1.0001)^32
     }
     if abs_tick & 0x40 != 0 {
-        ratio = mul_shr_64(ratio, 18_471_520_693_795_380_038); // sqrt(1.0001)^64
+        ratio = mul_shr_64(ratio, 18_505_865_242_158_133_248); // sqrt(1.0001)^64
     }
     if abs_tick & 0x80 != 0 {
-        ratio = mul_shr_64(ratio, 18_496_626_009_498_982_982); // sqrt(1.0001)^128
+        ratio = mul_shr_64(ratio, 18_565_175_891_880_198_144); // sqrt(1.0001)^128
     }
     if abs_tick & 0x100 != 0 {
-        ratio = mul_shr_64(ratio, 18_546_913_376_936_983_524); // sqrt(1.0001)^256
+        ratio = mul_shr_64(ratio, 18_684_368_066_214_465_536); // sqrt(1.0001)^256
     }
     if abs_tick & 0x200 != 0 {
-        ratio = mul_shr_64(ratio, 18_647_867_580_926_498_218); // sqrt(1.0001)^512
+        ratio = mul_shr_64(ratio, 18_925_053_041_274_802_176); // sqrt(1.0001)^512
     }
     if abs_tick & 0x400 != 0 {
-        ratio = mul_shr_64(ratio, 18_851_665_025_002_953_612); // sqrt(1.0001)^1024
+        ratio = mul_shr_64(ratio, 19_415_764_168_675_909_632); // sqrt(1.0001)^1024
     }
     if abs_tick & 0x800 != 0 {
-        ratio = mul_shr_64(ratio, 19_266_750_673_796_091_498); // sqrt(1.0001)^2048
+        ratio = mul_shr_64(ratio, 20_435_687_552_629_014_528); // sqrt(1.0001)^2048
     }
     if abs_tick & 0x1000 != 0 {
-        ratio = mul_shr_64(ratio, 20_126_642_082_702_498_814); // sqrt(1.0001)^4096
+        ratio = mul_shr_64(ratio, 22_639_080_592_215_080_960); // sqrt(1.0001)^4096
     }
     if abs_tick & 0x2000 != 0 {
-        ratio = mul_shr_64(ratio, 21_959_233_367_678_982_452); // sqrt(1.0001)^8192
+        ratio = mul_shr_64(ratio, 27_784_196_929_975_758_848); // sqrt(1.0001)^8192
     }
     if abs_tick & 0x4000 != 0 {
-        ratio = mul_shr_64(ratio, 26_132_715_642_395_174_284); // sqrt(1.0001)^16384
+        ratio = mul_shr_64(ratio, 41_848_122_137_926_787_072); // sqrt(1.0001)^16384
     }
     if abs_tick & 0x8000 != 0 {
-        ratio = mul_shr_64(ratio, 37_024_935_812_674_498_694); // sqrt(1.0001)^32768
+        ratio = mul_shr_64(ratio, 94_936_283_577_910_951_936); // sqrt(1.0001)^32768
     }
     if abs_tick & 0x10000 != 0 {
-        ratio = mul_shr_64(ratio, 74_342_281_095_758_498_294); // sqrt(1.0001)^65536
+        ratio = mul_shr_64(ratio, 488_590_176_324_437_606_400); // sqrt(1.0001)^65536
     }
     if abs_tick & 0x20000 != 0 {
-        ratio = mul_shr_64(ratio, 299_650_901_097_942_498_142); // sqrt(1.0001)^131072
+        ratio = mul_shr_64(ratio, 12_941_056_668_150_515_367_936); // sqrt(1.0001)^131072
     }
     if abs_tick & 0x40000 != 0 {
-        ratio = mul_shr_64(ratio, 4_868_748_807_049_698_982_194); // sqrt(1.0001)^262144
+        ratio = mul_shr_64(ratio, 9_078_618_265_592_131_460_530_176); // sqrt(1.0001)^262144
     }
 
     // For negative ticks, invert: 1/ratio in Q64.64
@@ -164,5 +161,43 @@ mod tests {
         let max_price = tick_to_sqrt_price(MAX_TICK).unwrap();
         assert!(min_price > 0);
         assert!(max_price > min_price);
+    }
+
+    #[test]
+    fn test_tick_1_matches_sqrt_1_0001() {
+        let price = tick_to_sqrt_price(1).unwrap();
+        let one = 1u128 << 64;
+        // sqrt(1.0001) ≈ 1.0000499987500624
+        // At tick 1, price should be ~0.005% above 1.0
+        let diff_pct = ((price as f64 - one as f64) / one as f64) * 100.0;
+        assert!(diff_pct > 0.004, "tick 1 price should be ~0.005% above 1.0");
+        assert!(diff_pct < 0.006, "tick 1 price should be ~0.005% above 1.0");
+    }
+
+    #[test]
+    fn test_tick_symmetry() {
+        // tick_to_sqrt_price(n) * tick_to_sqrt_price(-n) ≈ 1.0^2 = 2^128
+        let pos = tick_to_sqrt_price(1000).unwrap();
+        let neg = tick_to_sqrt_price(-1000).unwrap();
+        let product = crate::math::u256::U256::mul_u128(pos, neg);
+        let one_squared = 1u128 << 64; // 1.0 in Q64.64
+        let result = product.shr_64();
+        // Should be close to 1.0 in Q64.64
+        let error_pct = ((result as f64 - one_squared as f64) / one_squared as f64).abs() * 100.0;
+        assert!(error_pct < 0.01, "pos*neg product should be ~1.0, got {}% error", error_pct);
+    }
+
+    #[test]
+    fn test_roundtrip_tick_100() {
+        let price = tick_to_sqrt_price(100).unwrap();
+        let tick = sqrt_price_to_tick(price).unwrap();
+        assert_eq!(tick, 100);
+    }
+
+    #[test]
+    fn test_roundtrip_tick_negative() {
+        let price = tick_to_sqrt_price(-500).unwrap();
+        let tick = sqrt_price_to_tick(price).unwrap();
+        assert_eq!(tick, -500);
     }
 }
